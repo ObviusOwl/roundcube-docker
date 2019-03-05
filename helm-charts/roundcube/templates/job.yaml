@@ -1,0 +1,33 @@
+kind: CronJob
+apiVersion: batch/v1beta1
+metadata:
+  name: '{{ include "roundcube.fullname" . }}-cleandb'
+  labels:
+    app: {{ include "roundcube.name" . }}
+    chart: {{ include "roundcube.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  schedule: {{.Values.cleandbSchedule}}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: "{{ .Chart.Name }}-cleandb"
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            args:
+            - /bin/bash
+            - -c
+            - /var/www/html/bin/cleandb.sh
+            volumeMounts:
+            - mountPath: "/data"
+              name: "roundcube-data"
+
+          restartPolicy: OnFailure
+
+          volumes:
+          - name: "roundcube-data"
+            persistentVolumeClaim:
+              claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "roundcube.fullname" . }}-data{{- end }}
