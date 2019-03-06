@@ -12,6 +12,10 @@ spec:
   jobTemplate:
     spec:
       template:
+        metadata:
+          labels:
+            app: {{ include "roundcube.name" . }}
+            release: {{ .Release.Name }}
         spec:
           containers:
           - name: "{{ .Chart.Name }}-cleandb"
