@@ -2,7 +2,7 @@
 set -e
 
 # medawiki version 
-RC_VERSION="1.3.8"
+RC_VERSION="1.3.10"
 # image revision for multiple builds per day
 REV="1"
 
