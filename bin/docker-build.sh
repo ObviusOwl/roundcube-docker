@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
 
-# medawiki version 
-RC_VERSION="1.3.10"
+# roundcube version 
+# use the git tag from
+# https://github.com/roundcube/roundcubemail/releases
+RC_VERSION="1.4.2"
+
 # image revision for multiple builds per day
 REV="1"
 
