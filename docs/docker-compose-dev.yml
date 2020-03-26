@@ -1,0 +1,41 @@
+version: '3.3'
+
+services:
+   db:
+     image: mariadb:10.3
+     volumes:
+       - /tmp/roundcube_db:/var/lib/mysql
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: test
+       MYSQL_DATABASE: roundcube
+       MYSQL_USER: roundcube
+       MYSQL_PASSWORD: test
+
+   roundcube:
+     depends_on:
+       - db
+     image: roundcube:dev
+     build:
+       dockerfile: Dockerfile
+       context: ../../apps/roundcube/docker/roundcube
+       args:
+         RC_VERSION: "1.4.2"
+     environment:
+       ENABLE_INSTALLER: "yes"
+     ports:
+       - "8000:8080"
+     restart: always
+     volumes:
+       - /tmp/roundcube_data:/data
+
+   phpmyadmin:
+     depends_on:
+       - db
+     image: phpmyadmin/phpmyadmin
+     environment:
+       PMA_HOST: db
+     ports:
+       - "8001:80"
+     restart: always
+

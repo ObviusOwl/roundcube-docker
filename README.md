@@ -6,55 +6,90 @@ Do not use this project blindfold, but make sure you understand docker, the trad
 roundcube deployment and the content of this project.
 
 The docker image requires a volume mounted at `/data`. The following directories will 
-be created at startup. The corresponding directory in the roundcube deployment directory 
-are liked to those. 
+be created at startup:
 
 - `/data/config`
 - `/data/logs`
 - `/data/temp`
 
-The directories are populated with the files from the roundcube distribution. 
+Set the environment variable `ENABLE_INSTALLER` to "yes" to enable the roundcube 
+installer. Complete the installer and save the configuration file. Do not forget 
+to initialize the database.
 
-If there is no config file (`/data/config/config.inc.php`), roundcube will redirect 
-to the installer. Run the installer to the end to get the content for a config file.
-Create this file in the data directory. Refer to your kubernetes vendor documentation 
-for access to the files from outside the container.
+**Disable the installer** once done, the installer will leak all sensitive 
+informations if it is not disabled in the config file. As a precaution unset 
+the environement variable too so that the installer will be deleted on container 
+start up.
 
-On container start up, the installer directory will be removed automatically, if
-the config file exists. The installer directory is part of the image, but will not
-be visible anymore. The official install guide suggests to delete the installer, 
-when not needed to increase security. 
+The configuration file is saved in `/data/config/config.inc.php` and can be 
+edited from outside the container.
 
-The logs directory should not be used, if the docker best practices to log to stdout 
-are followed. 
+The start up script runs automatically the roundcube update script.
 
-This can be configured in the config file:
+The container crashes on start up if the database is not available. If started 
+at the same time as the database container, the roundcube container is expected to 
+restart until the database is ready.
 
-```php
-$config['log_driver'] = 'stdout';
-```
+Only the MySQL database driver is installed, other drivers can be installed by 
+extending the Dockerfile. Similarly, only English and German spellchecking is installed. 
 
-The default config uses `install_dir/temp` to store uploaded attachments. In the 
-container image this is symlinked to the temp folder on the data volume, which
-means there is no need to change the config. 
+The helm chart is not maintained anymore, as I switched to jsonnet.
 
-However to scale roundcube to multiple replicas, make sure to use a volume with 
-`ReadWriteMany` access capability. This is required anyway, for the database cleaning 
-cron job.
+# Technical Details
 
-The file `/data/database_version` will be created at start up to store the current
-roundcube version. This is required for the update script, which is called on each start 
-up. Do not modify this file by hand, unless you know for sure your database schema 
-is actually at his specific version. This also means **updating the database** is 
-handled automatically on each container start up.
+Roundcube is installed into `/roundcube`. Only the subdirectories `installer` and
+`config` are writable. The directories `/data/logs` and `/data/temp` are symlinked
+to the correspondent directories in the roundcube installation. `temp` is used 
+to store uploads.
+
+The start up script removes the content of `/roundcube/installer` if the environment 
+variable `ENABLE_INSTALLER` is not set to "yes".
+
+If the config file `/data/config/config.inc.php` exists it is symlinked into 
+`/roundcube/config` so that roundcube can use it.
+
+The installer writes the config file to `/roundcube/config/config.inc.php`, 
+roundcube is patched to move the file into `/data/config` and create the symlink 
+right after writing the file.
+
+If the file `/data/config/mimetypes.php` exists it is symlinked to 
+`/roundcube/config/mimetypes.php` replacing the default one.
+
+Roundcubes update script relies on input about the previous version number. 
+If no input is given, roundcube checks the installation directory 
+( `program/include/iniset.php` ), which however is part of the container's 
+root image and thus is always the latest. The version is kept in the database 
+and updated by the start up script. Oddly enough roundcube itself keeps already 
+the database schema version number (different from the program version number) 
+in the database. 
+
+The database has a table named `system`. The program version is saved with the 
+key `docker_app_version`, roundcube uses `roundcube-version` for the database schema.
+
+The default log driver is patched to be "stdout" instead of "file". If a existing
+config file is used, check the setting, as docker containers should not log to files.
+
+The URL path `/.health` points to a html file containing only the word "OK". This
+bypasses roundcube's session management and does not produce apache httpd log 
+entries. Use this URL for health/readiness probes in kubernetes. 
+It is still recommended to check the roundcube login page with a slower paced 
+monitoring system (e.g. icinga) to also catch database problems.
+
+Be careful with scaling the container to multiple instances, the start up script
+is not tested with concurrency and probably will create race conditions.
+
 
 # Building the image
 
 Use the script `./bin/docker-build.sh` to build the image. 
-Adapt the version variable and commit. The Dockerfile uses build arguments
-to download the wanted version of roundcube and the certificate of the CA issuing 
-the certificates for the SMTP and IMAP servers. By default the certificate is 
-downloaded from my site.
+Adapt the version variable and commit. 
+
+The following build arguments are available:
+
+- `RC_VERSION`: roundcube version to download from the [github releases page](https://github.com/roundcube/roundcubemail/releases)
+- `MAIL_CA_URL`: URL to a certificate authority file to install into the image.
+
+`RC_VERSION` is mandatory. `MAIL_CA_URL` defaults to my own CA used for the mail servers. 
 
 # Reference links
 
