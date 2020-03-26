@@ -1,0 +1,13 @@
+diff -ru roundcubemail-orig/config/defaults.inc.php roundcubemail/config/defaults.inc.php
+--- roundcubemail-orig/config/defaults.inc.php	2020-01-01 21:00:50.000000000 +0100
++++ roundcubemail/config/defaults.inc.php	2020-03-26 17:07:37.954408968 +0100
+@@ -72,7 +72,7 @@
+ // ----------------------------------
+ 
+ // log driver:  'syslog', 'stdout' or 'file'.
+-$config['log_driver'] = 'file';
++$config['log_driver'] = 'stdout';
+ 
+ // date format for log entries
+ // (read http://php.net/manual/en/function.date.php for all format characters)  
+

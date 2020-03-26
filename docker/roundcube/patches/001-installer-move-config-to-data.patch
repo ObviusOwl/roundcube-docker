@@ -1,0 +1,13 @@
+diff -ru roundcubemail-orig/installer/config.php roundcubemail/installer/config.php
+--- roundcubemail-orig/installer/config.php	2020-01-01 21:00:51.000000000 +0100
++++ roundcubemail/installer/config.php	2020-03-26 11:05:29.713657516 +0100
+@@ -41,6 +41,9 @@
+      }
+ 
+      echo '</p>';
++     
++     rename( RCMAIL_CONFIG_DIR."/config.inc.php", "/data/config/config.inc.php" );
++     symlink( "/data/config/config.inc.php", RCMAIL_CONFIG_DIR."/config.inc.php" );
+   }
+   else {
+     if (($dir = sys_get_temp_dir()) && @is_writable($dir)) {
