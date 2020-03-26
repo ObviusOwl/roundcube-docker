@@ -1,4 +1,4 @@
-FROM debian:9
+FROM debian:10
 
 ARG RC_VERSION
 ARG MAIL_CA_URL=https://www.terhaak.de/ca/terhaak.de-ca.pem
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         libapache2-mod-php \
         patch \
-        php7.0 \
+        php7.3 \
         php-intl \
         php-imagick \
         php-json \
@@ -33,7 +33,7 @@ RUN chmod 644 /usr/local/share/ca-certificates/mail-ca.crt \
     && update-ca-certificates
 
 COPY ./rootfs/site.conf /etc/apache2/sites-available/000-default.conf
-COPY ./rootfs/php.ini /etc/php/7.0/apache2/conf.d/99-roundcube.ini
+COPY ./rootfs/php.ini /etc/php/7.3/apache2/conf.d/99-roundcube.ini
 COPY ./patches /roundcube-patches
 
 RUN ln -sf /dev/stdout /var/log/apache2/access.log && ln -sf /dev/stdout /var/log/apache2/error.log \
