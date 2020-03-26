@@ -7,7 +7,7 @@ set -e
 RC_VERSION="1.4.3"
 
 # image revision for multiple builds per day
-REV="1"
+REV="2"
 
 IMG_TAG="$RC_VERSION-`date +%Y%m%d`-$REV"
 RC_IMG="reg.lan.terhaak.de/jojo/roundcube:$IMG_TAG"
