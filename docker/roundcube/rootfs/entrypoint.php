@@ -133,7 +133,7 @@ if( isset($db) ){
     $quer = $db->query( 'SELECT value FROM system WHERE name = "docker_app_version"' );
     $r = $db->fetch_assoc( $quer );
     if( $r !== False ){
-        $rc_version = $r[1];
+        $rc_version = $r[ "value" ];
         $rc_version_fromdb = True;
     }
 }
