@@ -33,7 +33,6 @@ restart until the database is ready.
 Only the MySQL database driver is installed, other drivers can be installed by 
 extending the Dockerfile. Similarly, only English and German spellchecking is installed. 
 
-The helm chart is not maintained anymore, as I switched to jsonnet.
 
 # Technical Details
 
