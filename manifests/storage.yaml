@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels: 
+    app.kubernetes.io/name: roundcube
+    app.kubernetes.io/part-of: roundcube
+  name: roundcube-data
+spec:
+  accessModes: [ReadWriteMany]
+  resources:
+    requests:
+      storage: 100Mi
+

@@ -1,0 +1,93 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: roundcube
+    app.kubernetes.io/part-of: roundcube
+  name: roundcube
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: roundcube
+      app.kubernetes.io/part-of: roundcube
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: roundcube
+        app.kubernetes.io/part-of: roundcube
+    spec:
+      containers:
+      - image: obviusowl/roundcube:latest
+        imagePullPolicy: Always
+        name: roundcube
+        livenessProbe:
+          httpGet: {path: /.health, port: http}
+          periodSeconds: 30
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          requests: 
+            cpu: 200m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: /data 
+          name: roundcube-data
+      securityContext:
+        fsGroup: 5001
+      volumes:
+      - name: roundcube-data
+        persistentVolumeClaim:
+          claimName: roundcube-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels: 
+    app.kubernetes.io/name: roundcube
+    app.kubernetes.io/part-of: roundcube
+  name: roundcube
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector: 
+    app.kubernetes.io/name: roundcube
+    app.kubernetes.io/part-of: roundcube
+  type: NodePort
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels: 
+    app.kubernetes.io/name: roundcube
+    app.kubernetes.io/part-of: roundcube
+  name: roundcube-cleandb
+spec:
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: roundcube
+            app.kubernetes.io/part-of: roundcube
+        spec:
+          containers:
+          - image: obviusowl/roundcube:latest
+            imagePullPolicy: Always
+            name: cleandb
+            args: ["/bin/bash", "-c", "/var/www/html/bin/cleandb.sh"]
+            volumeMounts:
+            - mountPath: /data 
+              name: roundcube-data
+          restartPolicy: OnFailure
+          volumes:
+          - name: roundcube-data
+            persistentVolumeClaim:
+              claimName: roundcube-data
+  schedule: 0 0 * * *
