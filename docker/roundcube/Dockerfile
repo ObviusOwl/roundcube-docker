@@ -1,4 +1,4 @@
-FROM debian:10
+FROM debian:11
 
 ARG RC_VERSION
 ARG MAIL_CA_URL=https://www.terhaak.de/ca/terhaak.de-ca.pem
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         libapache2-mod-php \
         patch \
-        php7.3 \
+        php7.4 \
         php-intl \
         php-imagick \
         php-json \
@@ -55,6 +55,8 @@ RUN	curl -o roundcube.tar.gz -SL https://github.com/roundcube/roundcubemail/rele
 RUN mkdir -p /data /roundcube-dist/config && chown 33:33 /data \
     && patch -p1 < /roundcube-patches/001-installer-move-config-to-data.patch \
     && patch -p1 < /roundcube-patches/002-default-log-stdout.patch \
+    && patch -p1 < /roundcube-patches/003-fixes-1.6.0-github-pr-8770.patch \
+    && patch -p1 < /roundcube-patches/004-fixes-1.6.0-github-2d00d1.patch \
     && mv /roundcube/logs /roundcube-dist/logs \
     && ln -s /data/logs /roundcube/logs \
     && mv /roundcube/temp /roundcube-dist/temp \

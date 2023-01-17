@@ -1,0 +1,104 @@
+From 2d00d18e6cb25c228eef410ed06062b812b6cb3a Mon Sep 17 00:00:00 2001
+From: Aleksander Machniak <alec@alec.pl>
+Date: Sun, 8 Jan 2023 09:54:19 +0100
+Subject: [PATCH] Rename 'request_uri_field' to 'request_path' and allow a path
+ in it (#8738, #8770)
+
+---
+ CHANGELOG.md               |  2 +-
+ config/defaults.inc.php    |  9 +++++---
+ program/include/rcmail.php | 47 +++++++++++++++++++++++---------------
+ tests/Rcmail/Rcmail.php    | 14 ++++++++----
+ 4 files changed, 45 insertions(+), 27 deletions(-)
+
+diff --color -Naur roundcubemail-1.6.0-patch1/config/defaults.inc.php roundcubemail-1.6.0/config/defaults.inc.php
+--- roundcubemail-1.6.0-patch1/config/defaults.inc.php	2023-01-17 14:16:13.397014184 +0100
++++ roundcubemail-1.6.0/config/defaults.inc.php	2023-01-17 14:27:01.801649975 +0100
+@@ -802,12 +802,15 @@
+ // Note: Use assets_path to not prevent the browser from caching assets
+ $config['use_secure_urls'] = false;
+ 
+-// Specify the $_SERVER field that contains the full path of the original HTTP request.
+-// This might be changed when Roundcube runs behind a reverse proxy using a subpath.
++// Specifies the full path of the original HTTP request, either as a real path or
++// $_SERVER field name. This might be useful when Roundcube runs behind a reverse
++// proxy using a subpath. This is a path part of the URL, not the full URL!
+ // The reverse proxy config can specify a custom header (e.g. X-Forwarded-Path) containing
+ // the path under which Roundcube is exposed to the outside world (e.g. /rcube/).
+-// This header vaue is then availbale in PHP with $_SERVER['HTTP_X_FORWARDED_PATH'].
+-$config['request_uri_field'] = 'REQUEST_URI';
++// This header value is then available in PHP with $_SERVER['HTTP_X_FORWARDED_PATH'].
++// By default the path comes from 'REQUEST_URI', 'REDIRECT_SCRIPT_URL' or 'SRIPT_NAME',
++// whichever is set (in this order).
++$config['request_path'] = null;
+ 
+ // Allows to define separate server/path for image/js/css files
+ // Warning: If the domain is different cross-domain access to some
+diff --git a/program/include/rcmail.php b/program/include/rcmail.php
+index a71ba8a660..f5de898ade 100644
+--- a/program/include/rcmail.php
++++ b/program/include/rcmail.php
+@@ -1120,18 +1120,7 @@ public function url($p, $absolute = false, $full = false, $secure = false)
+             }
+         }
+ 
+-        $base_path = '';
+-        $server_var = $this->get_request_uri_field();
+-        if ($server_var && !empty($_SERVER[$server_var])) {
+-            $base_path = preg_replace('/[?&].*$/', '', $_SERVER[$server_var]);
+-        }
+-        else if (!empty($_SERVER['REDIRECT_SCRIPT_URL'])) {
+-            $base_path = $_SERVER['REDIRECT_SCRIPT_URL'];
+-        }
+-        else if (!empty($_SERVER['SCRIPT_NAME'])) {
+-            $base_path = $_SERVER['SCRIPT_NAME'];
+-        }
+-        $base_path = preg_replace('![^/]+$!', '', $base_path);
++        $base_path = $this->get_request_path();
+ 
+         if ($secure && ($token = $this->get_secure_url_token(true))) {
+             // add token to the url
+@@ -1167,16 +1156,36 @@ public function url($p, $absolute = false, $full = false, $secure = false)
+     }
+ 
+     /**
+-     * Get the 'request_uri_field' config option
+-     * with an additional check against the 'proxy_whitelist' config
++     * Get the the request path
+      */
+-    protected function get_request_uri_field()
++    protected function get_request_path()
+     {
+-        $server_var = $this->config->get('request_uri_field');
+-        if (!empty($server_var) && (strpos($server_var, 'HTTP_') !== 0 || rcube_utils::check_proxy_whitelist_ip())) {
+-            return $server_var;
++        $path = $this->config->get('request_path');
++
++        if ($path && isset($_SERVER[$path])) {
++            // HTTP headers need to come from a trusted proxy host
++            if (strpos($path, 'HTTP_') === 0 && !rcube_utils::check_proxy_whitelist_ip()) {
++                return '/';
++            }
++
++            $path = $_SERVER[$path];
++        }
++        else if (empty($path)) {
++            foreach (['REQUEST_URI', 'REDIRECT_SCRIPT_URL', 'SCRIPT_NAME'] as $name) {
++                if (!empty($_SERVER[$name])) {
++                    $path = $_SERVER[$name];
++                    break;
++                }
++            }
+         }
+-        return null;
++        else {
++            return rtrim($path, '/') . '/';
++        }
++
++        $path = preg_replace('/[?&].*$/', '', $path);
++        $path = preg_replace('![^/]+$!', '', $path);
++
++        return rtrim($path, '/') . '/';
+     }
+ 
+     /**
