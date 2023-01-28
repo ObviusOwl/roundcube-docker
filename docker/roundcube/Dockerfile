@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./rootfs/site.conf /etc/apache2/sites-available/000-default.conf
-COPY ./rootfs/php.ini /etc/php/7.3/apache2/conf.d/99-roundcube.ini
+COPY ./rootfs/php.ini /etc/php/7.4/apache2/conf.d/99-roundcube.ini
 COPY ./patches /roundcube-patches
 
 RUN ln -sf /dev/stdout /var/log/apache2/access.log && ln -sf /dev/stdout /var/log/apache2/error.log \
@@ -50,8 +50,6 @@ RUN	curl -o roundcube.tar.gz -SL https://github.com/roundcube/roundcubemail/rele
 RUN mkdir -p /data /roundcube-dist/config && chown 33:33 /data \
     && patch -p1 < /roundcube-patches/001-installer-move-config-to-data.patch \
     && patch -p1 < /roundcube-patches/002-default-log-stdout.patch \
-    && patch -p1 < /roundcube-patches/003-fixes-1.6.0-github-pr-8770.patch \
-    && patch -p1 < /roundcube-patches/004-fixes-1.6.0-github-2d00d1.patch \
     && mv /roundcube/logs /roundcube-dist/logs \
     && ln -s /data/logs /roundcube/logs \
     && mv /roundcube/temp /roundcube-dist/temp \
