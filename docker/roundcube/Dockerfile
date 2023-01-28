@@ -1,7 +1,6 @@
 FROM debian:11
 
 ARG RC_VERSION
-ARG MAIL_CA_URL=https://www.terhaak.de/ca/terhaak.de-ca.pem
 
 ENV ENABLE_INSTALLER no
 
@@ -27,10 +26,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         php-xml \
         php-zip \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-ADD ${MAIL_CA_URL} /usr/local/share/ca-certificates/mail-ca.crt
-RUN chmod 644 /usr/local/share/ca-certificates/mail-ca.crt \
-    && update-ca-certificates
 
 COPY ./rootfs/site.conf /etc/apache2/sites-available/000-default.conf
 COPY ./rootfs/php.ini /etc/php/7.3/apache2/conf.d/99-roundcube.ini

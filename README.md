@@ -86,9 +86,8 @@ Adapt the version variable and commit.
 The following build arguments are available:
 
 - `RC_VERSION`: roundcube version to download from the [github releases page](https://github.com/roundcube/roundcubemail/releases)
-- `MAIL_CA_URL`: URL to a certificate authority file to install into the image.
 
-`RC_VERSION` is mandatory. `MAIL_CA_URL` defaults to my own CA used for the mail servers. 
+`RC_VERSION` is mandatory.
 
 # Reference links
 
