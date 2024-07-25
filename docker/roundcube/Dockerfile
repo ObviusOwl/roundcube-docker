@@ -1,4 +1,4 @@
-FROM debian:11
+FROM debian:12
 
 ARG RC_VERSION
 
@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         libapache2-mod-php \
         patch \
-        php7.4 \
+        php8.2 \
         php-intl \
         php-imagick \
         php-json \
@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./rootfs/site.conf /etc/apache2/sites-available/000-default.conf
-COPY ./rootfs/php.ini /etc/php/7.4/apache2/conf.d/99-roundcube.ini
+COPY ./rootfs/php.ini /etc/php/8.2/apache2/conf.d/99-roundcube.ini
 COPY ./patches /roundcube-patches
 
 RUN ln -sf /dev/stdout /var/log/apache2/access.log && ln -sf /dev/stdout /var/log/apache2/error.log \
