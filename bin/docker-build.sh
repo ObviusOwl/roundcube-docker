@@ -4,7 +4,7 @@ set -e
 # roundcube version 
 # use the git tag from
 # https://github.com/roundcube/roundcubemail/releases
-RC_VERSION="1.6.9"
+RC_VERSION="1.6.11"
 
 # image revision for multiple builds per day
 REV="1"
