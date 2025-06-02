@@ -13,7 +13,7 @@ IMG_TAG="$RC_VERSION-`date +%Y%m%d`-$REV"
 RC_IMG="reg.lan.terhaak.de/jojo/roundcube:$IMG_TAG"
 DH_IMG="obviusowl/roundcube:$IMG_TAG"
 
-sudo docker build -t "$RC_IMG" -t "$DH_IMG" \
+sudo docker build --pull -t "$RC_IMG" -t "$DH_IMG" \
   --build-arg RC_VERSION="$RC_VERSION" \
   ./docker/roundcube
 
